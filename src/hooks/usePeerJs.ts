@@ -1,20 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { useContext, useMemo, useCallback } from "react";
 import { PeerContext } from "../context/PeerContext";
 
 export default function usePeerContext() {
-  return useContext(PeerContext);
+  const context = useContext(PeerContext);
+  if (!context) {
+    throw new Error("usePeerContext must be used within a PeerContextProvider");
+  }
+
+  return context;
 }
 
 export function useStartHostConnection(hostId: string) {
-  // @ts-expect-error - dataConnection is not defined
   const { isOpen, createHost, disconnect } = usePeerContext();
-  // return a function that creates a host connection
   return useCallback(() => {
     if (isOpen) {
-      return;
+      return undefined;
     }
     createHost(hostId);
 
@@ -25,12 +25,10 @@ export function useStartHostConnection(hostId: string) {
 }
 
 export function useStartClientConnection(peerId: string, hostId: string) {
-  // @ts-expect-error - dataConnection is not defined
   const { isOpen, createClient, disconnect } = usePeerContext();
-  // return a function that creates a client connection
   return useCallback(() => {
     if (isOpen) {
-      return;
+      return undefined;
     }
     createClient(peerId, hostId);
     return () => {
@@ -40,69 +38,61 @@ export function useStartClientConnection(peerId: string, hostId: string) {
 }
 
 export const useMessageQueue = () => {
-  // @ts-expect-error - dataConnection is not defined
   const { messageQueue } = usePeerContext();
   return { messageQueue };
 };
 
-export function useLatestMessage() {
-  // @ts-expect-error - dataConnection is not defined
+export function useLatestMessage<T = unknown>() {
   const { latestMessage } = usePeerContext();
-  return [latestMessage];
+  return latestMessage as T;
 }
 
 export function useNextMessage() {
-  // @ts-expect-error - dataConnection is not defined
   const { nextMessage } = usePeerContext();
   return nextMessage;
 }
 
 export function useIsHandlingMessage() {
-  // @ts-expect-error - dataConnection is not defined
   const { isHandlingMessage, setIsHandlingMessage } = usePeerContext();
   return useMemo(() => {
     return { isHandlingMessage, setIsHandlingMessage };
   }, [isHandlingMessage, setIsHandlingMessage]);
 }
 
-export function useSendDataToHost() {
-  // @ts-expect-error - dataConnection is not defined
+export function useSendDataToHost<T = unknown>() {
   const { sendDataToHost } = usePeerContext();
   return useCallback(
-    (data: unknown) => {
+    (data: T) => {
       sendDataToHost(data);
     },
     [sendDataToHost]
   );
 }
 
-export function useSendDataToAllClients() {
-  // @ts-expect-error - dataConnection is not defined
+export function useSendDataToAllClients<T = unknown>() {
   const { sendToAllClients } = usePeerContext();
   return useCallback(
-    (data: unknown) => {
+    (data: T) => {
       sendToAllClients(data);
     },
     [sendToAllClients]
   );
 }
 
-export function useSendDataToRemainingClients() {
-  // @ts-expect-error - dataConnection is not defined
+export function useSendDataToRemainingClients<T = unknown>() {
   const { sendDataToRemainingClients } = usePeerContext();
   return useCallback(
-    (payload: any) => {
+    (payload: { id: string; data: T }) => {
       sendDataToRemainingClients(payload);
     },
     [sendDataToRemainingClients]
   );
 }
 
-export function useSendDataToClientAtId() {
-  // @ts-expect-error - dataConnection is not defined
+export function useSendDataToClientAtId<T = unknown>() {
   const { sendDataToClientAtId } = usePeerContext();
   return useCallback(
-    (payload: unknown) => {
+    (payload: { id: string; data: T }) => {
       sendDataToClientAtId(payload);
     },
     [sendDataToClientAtId]
@@ -110,19 +100,16 @@ export function useSendDataToClientAtId() {
 }
 
 export function useIsHost(): { isHost: boolean } {
-  // @ts-expect-error - dataConnection is not defined
   const { isHost } = usePeerContext();
   return { isHost };
 }
 
 export function useHostInfo() {
-  // @ts-expect-error - dataConnection is not defined
   const { isHost, hostId } = usePeerContext();
   return { isHost, hostId };
 }
 
 export function usePeerId() {
-  // @ts-expect-error - dataConnection is not defined
   const { id } = usePeerContext();
   return { id };
 }
@@ -140,6 +127,7 @@ export function useInPeerConnection() {
     return !!peerJS?.isConnected;
   }, [peerJS]);
 }
+
 export function useDidFindHost() {
   const peerJS = usePeerContext();
   return useMemo(() => {
