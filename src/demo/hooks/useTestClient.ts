@@ -5,7 +5,7 @@ import {
   useBroadcastFromClient,
   useLatestMessageWrapper,
   useSelectIsPeerOpen,
-} from "./usePeerJs";
+} from "../../hooks/usePeerJs";
 
 export interface TestMessage {
   type: "ping" | "pong" | "test";

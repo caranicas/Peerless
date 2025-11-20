@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
-import { useState } from "react";
-import { useTestClient, UseTestClientConfig } from "../../../hooks/useTestClient";
+import { useTestHost, UseTestHostConfig } from "../../hooks/useTestHost";
 import { PeerlessStats } from "../PeerlessStatus/PeerlessStats";
 
-export interface PeerTestClientProps extends UseTestClientConfig {
+export interface PeerTestHostProps extends UseTestHostConfig {
   renderButton?: (props: {
     onClick: () => void;
     disabled?: boolean;
@@ -13,17 +12,13 @@ export interface PeerTestClientProps extends UseTestClientConfig {
   className?: string;
 }
 
-export function PeerTestClient({
+export function PeerTestHost({
   renderButton,
   showStats = true,
   className = "",
   ...config
-}: PeerTestClientProps) {
-  const [hostIdInput, setHostIdInput] = useState(config.hostId || "");
-  const { hostId, clientId, logs, isConnecting, isPeerOpen, actions } = useTestClient({
-    ...config,
-    hostId: hostIdInput,
-  });
+}: PeerTestHostProps) {
+  const { hostId, logs, isHosting, messageCount, isPeerOpen, peerId, actions } = useTestHost(config);
 
   const defaultButton = (props: {
     onClick: () => void;
@@ -41,66 +36,59 @@ export function PeerTestClient({
     <div className={className} style={{ display: "flex", gap: "1rem", maxWidth: "100%" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1rem" }}>
         <header>
-          <h1>PeerJS Test - Client</h1>
-          <p>Test peer connection as client</p>
+          <h1>PeerJS Test - Host</h1>
+          <p>Test peer connection as host</p>
         </header>
 
         <section>
           <h2>Connection Info</h2>
           <div>
             <p>
-              <strong>Client ID:</strong> {clientId}
+              <strong>Host ID:</strong> {hostId}
             </p>
             <p>
-              <strong>Host ID:</strong> {hostId}
+              <strong>Peer ID:</strong> {peerId?.id ?? "Not assigned"}
             </p>
             <p>
               <strong>Is Open:</strong> {isPeerOpen ? "✅ Yes" : "❌ No"}
             </p>
             <p>
-              <strong>Is Connecting:</strong> {isConnecting ? "✅ Yes" : "❌ No"}
+              <strong>Is Hosting:</strong> {isHosting ? "✅ Yes" : "❌ No"}
+            </p>
+            <p>
+              <strong>Messages Received:</strong> {messageCount}
             </p>
           </div>
         </section>
 
         <section>
-          <h2>Host Connection</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <label htmlFor="hostId" style={{ fontWeight: "bold" }}>
-              Host ID to connect to:
-            </label>
-            <input
-              id="hostId"
-              type="text"
-              value={hostIdInput}
-              onChange={(e) => setHostIdInput(e.target.value)}
-              placeholder="Paste Host ID here..."
+          <h2>Host ID (Share with clients)</h2>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <code
               style={{
                 padding: "0.5rem",
-                fontSize: "1rem",
-                border: "1px solid #ddd",
+                background: "#f5f5f5",
                 borderRadius: "4px",
-                fontFamily: "monospace",
+                flex: 1,
               }}
-              disabled={isConnecting || isPeerOpen}
-            />
+            >
+              {hostId}
+            </code>
+            <ButtonComponent onClick={actions.copyHostId}>Copy Host ID</ButtonComponent>
           </div>
         </section>
 
         <section>
           <h2>Controls</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
-            <ButtonComponent onClick={actions.connect} disabled={isConnecting || !hostIdInput}>
-              1. Connect to Host
+            <ButtonComponent onClick={actions.startHost} disabled={isHosting}>
+              1. Start Host
             </ButtonComponent>
-            <ButtonComponent onClick={actions.requestSync} disabled={!isPeerOpen}>
-              2. Request Sync
+            <ButtonComponent onClick={actions.broadcast} disabled={!isHosting || !isPeerOpen}>
+              2. Send Broadcast
             </ButtonComponent>
-            <ButtonComponent onClick={actions.sendMessage} disabled={!isPeerOpen}>
-              3. Send Test Message
-            </ButtonComponent>
-            <ButtonComponent onClick={actions.broadcast} disabled={!isPeerOpen}>
-              4. Broadcast to All
+            <ButtonComponent onClick={actions.stopHost} disabled={!isHosting}>
+              3. Stop Host
             </ButtonComponent>
             <ButtonComponent onClick={actions.clearLogs}>Clear Logs</ButtonComponent>
           </div>
@@ -148,4 +136,4 @@ export function PeerTestClient({
   );
 }
 
-export default PeerTestClient;
+export default PeerTestHost;

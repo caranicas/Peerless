@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useTestHost, UseTestHostConfig } from "../../hooks/useTestHost";
+import { useTestHost, UseTestHostConfig } from "../../../hooks/useTestHost";
 import { PeerlessStats } from "../PeerlessStatus/PeerlessStats";
 
 export interface PeerTestHostProps extends UseTestHostConfig {

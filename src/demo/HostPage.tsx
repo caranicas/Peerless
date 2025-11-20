@@ -1,6 +1,6 @@
 import PeerContextProvider from "../context/PeerContextProvider";
-import { PeerTestHost } from "../ui/PeerTest/PeerTestHost";
-import type { TestMessage } from "../hooks/useTestHost";
+import { PeerTestHost } from "./ui/PeerTest/PeerTestHost";
+import type { TestMessage } from "./hooks/useTestHost";
 
 export function HostPage() {
   return (

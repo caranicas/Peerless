@@ -1,6 +1,6 @@
 import PeerContextProvider from "../context/PeerContextProvider";
-import { PeerTestClient } from "../ui/PeerTest/PeerTestClient";
-import type { TestMessage } from "../hooks/useTestClient";
+import { PeerTestClient } from "./ui/PeerTest/PeerTestClient";
+import type { TestMessage } from "./hooks/useTestClient";
 
 export function ClientPage() {
   return (

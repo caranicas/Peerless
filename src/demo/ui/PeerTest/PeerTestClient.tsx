@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useTestClient, UseTestClientConfig } from "../../../hooks/useTestClient";
+import { useTestClient, UseTestClientConfig } from "../../hooks/useTestClient";
 import { PeerlessStats } from "../PeerlessStatus/PeerlessStats";
 
 export interface PeerTestClientProps extends UseTestClientConfig {
