@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import {
   useStartHostConnection,
   useSendDataToAllClients,
@@ -22,8 +23,8 @@ export interface PeerTestHostProps {
   renderButton?: (props: {
     onClick: () => void;
     disabled?: boolean;
-    children: React.ReactNode;
-  }) => React.ReactNode;
+    children: ReactNode;
+  }) => ReactNode;
   showStats?: boolean;
   className?: string;
 }
@@ -126,7 +127,7 @@ export function PeerTestHost({
   const defaultButton = (props: {
     onClick: () => void;
     disabled?: boolean;
-    children: React.ReactNode;
+    children: ReactNode;
   }) => (
     <button onClick={props.onClick} disabled={props.disabled}>
       {props.children}

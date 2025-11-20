@@ -23,6 +23,9 @@ declare module "react" {
     deps?: unknown[]
   ): T;
   export function useMemo<T>(factory: () => T, deps?: unknown[]): T;
+  export function useRef<T>(initialValue: T): { current: T };
+  export function useRef<T>(initialValue: T | null): { current: T | null };
+  export function useRef<T = undefined>(): { current: T | undefined };
 
   export const Fragment: unique symbol;
 
