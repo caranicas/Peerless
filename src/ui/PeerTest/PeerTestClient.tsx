@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useTestClient, UseTestClientConfig } from "../../../hooks/useTestClient";
+import { useTestClient, UseTestClientConfig } from "../../demo/hooks/useTestClient";
 import { PeerlessStats } from "../PeerlessStatus/PeerlessStats";
 
 export interface PeerTestClientProps extends UseTestClientConfig {
@@ -128,7 +128,7 @@ export function PeerTestClient({
             {logs.length === 0 ? (
               <p style={{ color: "#999" }}>No logs yet...</p>
             ) : (
-              logs.map((log, index) => (
+              logs.map((log: string, index: number) => (
                 <div key={index} style={{ marginBottom: "0.25rem" }}>
                   {log}
                 </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import usePeerContext from "../../../hooks/usePeerJs";
+import usePeerContext from "../../hooks/usePeerJs";
 
 export function PeerlessStats() {
   const {

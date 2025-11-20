@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useTestHost, UseTestHostConfig } from "../../../hooks/useTestHost";
+import { useTestHost, UseTestHostConfig } from "../../demo/hooks/useTestHost";
 import { PeerlessStats } from "../PeerlessStatus/PeerlessStats";
 
 export interface PeerTestHostProps extends UseTestHostConfig {
@@ -116,7 +116,7 @@ export function PeerTestHost({
             {logs.length === 0 ? (
               <p style={{ color: "#999" }}>No logs yet...</p>
             ) : (
-              logs.map((log, index) => (
+              logs.map((log: string, index: number) => (
                 <div key={index} style={{ marginBottom: "0.25rem" }}>
                   {log}
                 </div>
