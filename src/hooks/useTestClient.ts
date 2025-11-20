@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   useStartClientConnection,
-  useSendDataToHost,
+  useSendData,
   useBroadcastFromClient,
   useLatestMessageWrapper,
   useSelectIsPeerOpen,
@@ -50,7 +50,7 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
   const [isConnecting, setIsConnecting] = useState(false);
 
   const startClient = useStartClientConnection(clientId, config.hostId);
-  const sendToHost = useSendDataToHost<TestMessage>();
+  const sendData = useSendData<TestMessage>();
   const broadcast = useBroadcastFromClient<TestMessage & { _relay?: boolean }>();
   const latestMessageWrapper = useLatestMessageWrapper<TestMessage>();
   const isPeerOpen = useSelectIsPeerOpen();
@@ -76,7 +76,7 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
       // Auto-respond to pings
       if (latestMessage.type === "ping") {
         addLog("🔄 Auto-responding with pong...");
-        sendToHost({
+        sendData({
           type: "pong",
           payload: {
             message: "Pong from client!",
@@ -86,7 +86,7 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
         });
       }
     }
-  }, [latestMessageWrapper?._id, sendToHost, addLog]);
+  }, [latestMessageWrapper?._id, sendData, addLog, clientId]);
 
   const handleConnect = useCallback(() => {
     addLog("🟢 Connecting to host...");
@@ -115,17 +115,17 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
     };
     addLog(`📤 Sending to host: ${JSON.stringify(message)}`);
     try {
-      sendToHost(message);
+      sendData(message);
       addLog("✅ Message sent");
     } catch (error) {
       addLog(`❌ Send error: ${error}`);
     }
-  }, [sendToHost, addLog, clientId]);
+  }, [sendData, addLog, clientId]);
 
   const handleRequestSync = useCallback(() => {
     addLog("🔄 Requesting sync from host...");
     try {
-      sendToHost({
+      sendData({
         type: "test",
         payload: {
           message: "Sync request",
@@ -137,7 +137,7 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
     } catch (error) {
       addLog(`❌ Sync request error: ${error}`);
     }
-  }, [sendToHost, addLog, clientId]);
+  }, [sendData, addLog, clientId]);
 
   const handleBroadcast = useCallback(() => {
     const message = {

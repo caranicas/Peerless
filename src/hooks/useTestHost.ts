@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   useStartHostConnection,
-  useSendDataToAllClients,
+  useSendData,
   useLatestMessageWrapper,
   usePeerId,
   useSelectIsPeerOpen,
@@ -51,7 +51,7 @@ export function useTestHost(config: UseTestHostConfig = {}): UseTestHostReturn {
   const [messageCount, setMessageCount] = useState(0);
 
   const startHost = useStartHostConnection(hostId);
-  const broadcast = useSendDataToAllClients<TestMessage>();
+  const sendData = useSendData<TestMessage>();
   const latestMessageWrapper = useLatestMessageWrapper<TestMessage>();
   const peerId = usePeerId();
   const isPeerOpen = useSelectIsPeerOpen();
@@ -116,12 +116,12 @@ export function useTestHost(config: UseTestHostConfig = {}): UseTestHostReturn {
     };
     addLog(`📤 Broadcasting: ${JSON.stringify(message)}`);
     try {
-      broadcast(message);
+      sendData(message);
       addLog("✅ Broadcast sent");
     } catch (error) {
       addLog(`❌ Broadcast error: ${error}`);
     }
-  }, [broadcast, addLog]);
+  }, [sendData, addLog]);
 
   const handleClearLogs = useCallback(() => {
     setLogs([]);

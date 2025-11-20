@@ -47,64 +47,45 @@ export function useLatestMessageWrapper<T = unknown>() {
   return latestMessage as import("../context/PeerContext").MessageWrapper<T> | null;
 }
 
-export function useSendDataToHost<T = unknown>() {
-  const { sendDataToHost } = usePeerContext();
-  return useCallback(
-    (data: T) => {
-      sendDataToHost(data);
-    },
-    [sendDataToHost]
-  );
-}
-
-export function useSendDataToAllClients<T = unknown>() {
-  const { sendToAllClients } = usePeerContext();
-  return useCallback(
-    (data: T) => {
-      sendToAllClients(data);
-    },
-    [sendToAllClients]
-  );
+// Consolidated send function - works for both host and client
+export function useSendData<T = unknown>() {
+  const { sendData } = usePeerContext();
+  return sendData as (data: T) => void;
 }
 
 export function useBroadcastFromClient<T = unknown>() {
   const { broadcastFromClient } = usePeerContext();
-  return useCallback(
-    (data: T) => {
-      broadcastFromClient(data);
-    },
-    [broadcastFromClient]
-  );
+  return broadcastFromClient as (data: T) => void;
 }
 
 export function useSendDataToRemainingClients<T = unknown>() {
   const { sendDataToRemainingClients } = usePeerContext();
-  return useCallback(
-    (payload: { id: string; data: T }) => {
-      sendDataToRemainingClients(payload);
-    },
-    [sendDataToRemainingClients]
-  );
+  return sendDataToRemainingClients as (payload: { id: string; data: T }) => void;
 }
 
 export function useSendDataToClientAtId<T = unknown>() {
   const { sendDataToClientAtId } = usePeerContext();
-  return useCallback(
-    (payload: { id: string; data: T }) => {
-      sendDataToClientAtId(payload);
-    },
-    [sendDataToClientAtId]
-  );
-}
-
-export function useIsHost(): { isHost: boolean } {
-  const { isHost } = usePeerContext();
-  return { isHost };
+  return sendDataToClientAtId as (payload: { id: string; data: T }) => void;
 }
 
 export function useHostInfo() {
   const { isHost, hostId } = usePeerContext();
   return { isHost, hostId };
+}
+
+export function useConnectedClients() {
+  const { connectedClients } = usePeerContext();
+  return connectedClients;
+}
+
+export function usePeerError() {
+  const { error } = usePeerContext();
+  return error;
+}
+
+export function useClearMessageQueue() {
+  const { clearMessageQueue } = usePeerContext();
+  return clearMessageQueue;
 }
 
 export function usePeerId() {
