@@ -6,7 +6,13 @@ export interface PeerMessage {
   payload: unknown;
 }
 
-export interface PeerContextValue {
+export interface MessageWrapper<T> {
+  _id: number;
+  _timestamp: number;
+  data: T;
+}
+
+export interface PeerContextValue<TMessage = unknown> {
   createPeer: (id: string, peerOptions?: PeerJSOption) => void;
   createHost: (id: string, peerOptions?: PeerJSOption) => void;
   createClient: (id: string, hostId: string, peerOptions?: PeerJSOption) => void;
@@ -20,16 +26,13 @@ export interface PeerContextValue {
   isConnected: boolean;
   foundHost: boolean;
 
-  messageQueue: unknown[];
-  latestMessage: unknown | null;
-  isHandlingMessage: boolean;
-  setIsHandlingMessage: (value: boolean) => void;
-  nextMessage: () => void;
+  latestMessage: MessageWrapper<TMessage> | null;
 
-  sendDataToHost: (data: unknown) => void;
-  sendToAllClients: (data: unknown) => void;
-  sendDataToRemainingClients: ({ id, data }: { id: string; data: unknown }) => void;
-  sendDataToClientAtId: ({ id, data }: { id: string; data: unknown }) => void;
+  sendDataToHost: (data: TMessage) => void;
+  sendToAllClients: (data: TMessage) => void;
+  sendDataToRemainingClients: ({ id, data }: { id: string; data: TMessage }) => void;
+  sendDataToClientAtId: ({ id, data }: { id: string; data: TMessage }) => void;
+  broadcastFromClient: (data: TMessage) => void;
 }
 
-export const PeerContext = createContext<PeerContextValue | undefined>(undefined);
+export const PeerContext = createContext<PeerContextValue<any> | undefined>(undefined);

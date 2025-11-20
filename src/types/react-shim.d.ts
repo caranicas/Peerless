@@ -28,6 +28,7 @@ declare module "react" {
   export function useRef<T = undefined>(): { current: T | undefined };
 
   export const Fragment: unique symbol;
+  export const StrictMode: (props: PropsWithChildren) => ReactNode;
 
   interface ReactExports {
     createElement: (...args: any[]) => ReactNode;

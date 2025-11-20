@@ -9,7 +9,6 @@ export function PeerlessStats() {
     isOpen,
     isConnected,
     foundHost,
-    messageQueue,
     latestMessage,
   } = usePeerContext();
 
@@ -43,10 +42,7 @@ export function PeerlessStats() {
           <strong>Host discovered:</strong> {foundHost ? "yes" : "no"}
         </li>
         <li>
-          <strong>Queued messages:</strong> {messageQueue.length}
-        </li>
-        <li>
-          <strong>Latest message:</strong> {JSON.stringify(latestMessage)}
+          <strong>Latest message:</strong> {JSON.stringify(latestMessage?.data)}
         </li>
       </ul>
     </div>

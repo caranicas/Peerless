@@ -37,26 +37,14 @@ export function useStartClientConnection(peerId: string, hostId: string) {
   }, [peerId, hostId, isOpen, createClient, disconnect]);
 }
 
-export const useMessageQueue = () => {
-  const { messageQueue } = usePeerContext();
-  return { messageQueue };
-};
-
 export function useLatestMessage<T = unknown>() {
   const { latestMessage } = usePeerContext();
-  return latestMessage as T;
+  return latestMessage?.data as T;
 }
 
-export function useNextMessage() {
-  const { nextMessage } = usePeerContext();
-  return nextMessage;
-}
-
-export function useIsHandlingMessage() {
-  const { isHandlingMessage, setIsHandlingMessage } = usePeerContext();
-  return useMemo(() => {
-    return { isHandlingMessage, setIsHandlingMessage };
-  }, [isHandlingMessage, setIsHandlingMessage]);
+export function useLatestMessageWrapper<T = unknown>() {
+  const { latestMessage } = usePeerContext();
+  return latestMessage as import("../context/PeerContext").MessageWrapper<T> | null;
 }
 
 export function useSendDataToHost<T = unknown>() {
@@ -76,6 +64,16 @@ export function useSendDataToAllClients<T = unknown>() {
       sendToAllClients(data);
     },
     [sendToAllClients]
+  );
+}
+
+export function useBroadcastFromClient<T = unknown>() {
+  const { broadcastFromClient } = usePeerContext();
+  return useCallback(
+    (data: T) => {
+      broadcastFromClient(data);
+    },
+    [broadcastFromClient]
   );
 }
 

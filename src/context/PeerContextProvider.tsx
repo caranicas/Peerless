@@ -1,20 +1,20 @@
 import type { PropsWithChildren } from "react";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Peer from "peerjs";
 
 import type { PeerJSOption, PeerConnectOption, DataConnection } from "peerjs";
-import { PeerContext } from "./PeerContext";
+import { PeerContext, type MessageWrapper } from "./PeerContext";
 
-interface PeerContextProviderProps {
+interface PeerContextProviderProps<TMessage = unknown> {
   id?: string;
   peerOptions?: PeerJSOption;
 }
 
-export default function PeerContextProvider({
+export default function PeerContextProvider<TMessage = unknown>({
   children,
   id,
   peerOptions,
-}: PropsWithChildren<PeerContextProviderProps>) {
+}: PropsWithChildren<PeerContextProviderProps<TMessage>>) {
   const [peer, setPeer] = useState<Peer | undefined>(undefined);
   const [isOpen, setIsOpen] = useState(false);
   const [isHost, setIsHost] = useState(true);
@@ -22,14 +22,14 @@ export default function PeerContextProvider({
 
   const [hostId, setHostId] = useState<string>("");
   const [foundHost, setFoundHost] = useState(false);
-  const [latestMessage, setLatestMessage] = useState<unknown | null>(null);
-  const [messageQueue, setMessageQueue] = useState<unknown[]>([]);
-
-  const [isHandlingMessage, setIsHandlingMessage] = useState(false);
-  const [isFinishedHandlingMessage, setIsFinishHandlingMessage] = useState(false);
+  const [latestMessage, setLatestMessage] = useState<MessageWrapper<TMessage> | null>(null);
+  const [messageQueue, setMessageQueue] = useState<MessageWrapper<TMessage>[]>([]);
+  const messageCounterRef = useRef(0);
   const [connectionMap, setConnectionMap] = useState<Map<string, DataConnection>>(
     () => new Map()
   );
+  const attachedHandlersRef = useRef<Set<string>>(new Set());
+  const connectionMapRef = useRef(connectionMap);
 
   /** PEER  */
   const createPeer = useCallback(
@@ -138,7 +138,7 @@ export default function PeerContextProvider({
 
   /** CONNECTION  */
   const sendDataToHost = useCallback(
-    (data: unknown) => {
+    (data: TMessage) => {
       connectionMap.forEach((connection) => {
         connection.send(data);
       });
@@ -147,7 +147,7 @@ export default function PeerContextProvider({
   );
 
   const sendDataToClientAtId = useCallback(
-    ({ id: clientId, data }: { id: string; data: unknown }) => {
+    ({ id: clientId, data }: { id: string; data: TMessage }) => {
       const client = connectionMap.get(clientId);
       client?.send(data);
     },
@@ -155,7 +155,7 @@ export default function PeerContextProvider({
   );
 
   const sendDataToRemainingClients = useCallback(
-    ({ id: ignoredId, data }: { id: string; data: unknown }) => {
+    ({ id: ignoredId, data }: { id: string; data: TMessage }) => {
       connectionMap.forEach((connection) => {
         if (connection.peer !== ignoredId) {
           connection.send(data);
@@ -166,7 +166,7 @@ export default function PeerContextProvider({
   );
 
   const sendToAllClients = useCallback(
-    (data: unknown) => {
+    (data: TMessage) => {
       connectionMap.forEach((connection) => {
         connection.send(data);
       });
@@ -174,29 +174,15 @@ export default function PeerContextProvider({
     [connectionMap]
   );
 
-  const nextMessage = useCallback(() => {
-    setIsFinishHandlingMessage(true);
-  }, []);
-
-  useEffect(() => {
-    if (isHandlingMessage && isFinishedHandlingMessage) {
-      setMessageQueue((queue) => {
-        const [, ...remaining] = queue;
-        setLatestMessage(remaining[0] ?? null);
-        return remaining;
+  const broadcastFromClient = useCallback(
+    (data: TMessage) => {
+      // Client sends to host with relay flag, host forwards to all other clients
+      connectionMap.forEach((connection) => {
+        connection.send({ ...data, _relay: true } as TMessage);
       });
-      setIsFinishHandlingMessage(false);
-      setIsHandlingMessage(false);
-    }
-  }, [isFinishedHandlingMessage, isHandlingMessage]);
-
-  const dataHandler = useCallback((data: unknown) => {
-    setMessageQueue((queue) => {
-      const nextQueue = queue.concat([data]);
-      setLatestMessage(nextQueue[0] ?? null);
-      return nextQueue;
-    });
-  }, []);
+    },
+    [connectionMap]
+  );
 
   const openConnectionHandler = useCallback(() => {
     if (!isHost) {
@@ -204,23 +190,77 @@ export default function PeerContextProvider({
     }
   }, [isHost]);
 
+  // Keep ref in sync with state
+  useEffect(() => {
+    connectionMapRef.current = connectionMap;
+  }, [connectionMap]);
+
+  // Auto-process message queue
+  useEffect(() => {
+    if (messageQueue.length === 0) {
+      return;
+    }
+
+    // Process first message in queue
+    const nextMessage = messageQueue[0];
+    setLatestMessage(nextMessage);
+    
+    // Remove processed message after a short delay to ensure components react
+    const timer = setTimeout(() => {
+      setMessageQueue(prev => prev.slice(1));
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [messageQueue]);
+
   useEffect(() => {
     if (connectionMap.size === 0) {
       return;
     }
 
-    connectionMap.forEach((connection) => {
+    connectionMap.forEach((connection, senderId) => {
+      // Only attach handlers if we haven't already attached them to this connection
+      if (attachedHandlersRef.current.has(senderId)) {
+        return;
+      }
+
+      const dataHandler = (data: TMessage) => {
+        messageCounterRef.current += 1;
+        const messageWrapper: MessageWrapper<TMessage> = {
+          _id: messageCounterRef.current,
+          _timestamp: Date.now(),
+          data,
+        };
+        
+        // Add to queue for sequential processing
+        setMessageQueue((prev) => [...prev, messageWrapper]);
+        
+        // If host receives a message with _relay flag, broadcast to all other clients
+        // Use connectionMapRef.current to get the LATEST connectionMap
+        if (isHost && data && typeof data === 'object' && '_relay' in data) {
+          connectionMapRef.current.forEach((conn) => {
+            if (conn.peer !== senderId) {
+              conn.send(data);
+            }
+          });
+        }
+      };
+
       connection.on("open", openConnectionHandler);
       connection.on("data", dataHandler);
+      attachedHandlersRef.current.add(senderId);
     });
 
     return () => {
-      connectionMap.forEach((connection) => {
-        connection.off("open", openConnectionHandler);
-        connection.off("data", dataHandler);
+      // Clean up handlers for connections that no longer exist
+      const currentIds = new Set(connectionMap.keys());
+      attachedHandlersRef.current.forEach((senderId) => {
+        if (!currentIds.has(senderId)) {
+          attachedHandlersRef.current.delete(senderId);
+        }
       });
     };
-  }, [dataHandler, openConnectionHandler, connectionMap]);
+  }, [isHost, openConnectionHandler, connectionMap]);
 
   useEffect(() => {
     if (id && !peer) {
@@ -242,11 +282,8 @@ export default function PeerContextProvider({
         sendToAllClients,
         sendDataToRemainingClients,
         sendDataToClientAtId,
-        messageQueue,
+        broadcastFromClient,
         latestMessage,
-        isHandlingMessage,
-        setIsHandlingMessage,
-        nextMessage,
         isOpen,
         isConnected,
         id: peer?.id,

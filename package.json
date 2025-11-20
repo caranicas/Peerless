@@ -14,7 +14,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "tsc --noEmit",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "demo": "vite --open /host",
+    "demo:open": "node -e \"setTimeout(() => { require('child_process').exec('start http://localhost:3000/host && timeout /t 1 && start http://localhost:3000/client'); }, 2000)\"",
+    "demo:build": "vite build",
+    "demo:preview": "vite preview"
   },
   "keywords": ["peerjs", "react", "hooks", "webrtc"],
   "author": "",
@@ -28,6 +32,11 @@
   },
   "devDependencies": {
     "@types/react": "^18.2.73",
-    "typescript": "^5.4.3"
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.4.3",
+    "vite": "^5.2.0"
   }
 }
