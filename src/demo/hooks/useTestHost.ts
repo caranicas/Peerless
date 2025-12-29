@@ -5,6 +5,10 @@ import {
   useLatestMessageWrapper,
   usePeerId,
   useSelectIsPeerOpen,
+  usePeerRecovery,
+  useMessageHistory,
+  useHistoryReplay,
+  useConnectedClients,
 } from "../../hooks/usePeerJs";
 
 export interface TestMessage {
@@ -28,6 +32,10 @@ export interface UseTestHostReturn {
   isHosting: boolean;
   messageCount: number;
   isPeerOpen: boolean;
+  isReconnecting: boolean;
+  reconnectAttempts: number;
+  historySize: number;
+  connectedClients: string[];
   peerId: { id?: string };
   actions: {
     startHost: () => void;
@@ -36,6 +44,9 @@ export interface UseTestHostReturn {
     clearLogs: () => void;
     copyHostId: () => void;
     copyLogs: () => void;
+    retryConnection: () => void;
+    restartPeer: () => void;
+    replayHistory: () => void;
     addLog: (message: string) => void;
   };
 }
@@ -55,6 +66,10 @@ export function useTestHost(config: UseTestHostConfig = {}): UseTestHostReturn {
   const latestMessageWrapper = useLatestMessageWrapper<TestMessage>();
   const peerId = usePeerId();
   const isPeerOpen = useSelectIsPeerOpen();
+  const { retryConnection, restartPeer, isReconnecting, reconnectAttempts } = usePeerRecovery();
+  const history = useMessageHistory<TestMessage>();
+  const { sendHistoryToClient } = useHistoryReplay<TestMessage>();
+  const connectedClients = useConnectedClients();
 
   const addLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -73,6 +88,14 @@ export function useTestHost(config: UseTestHostConfig = {}): UseTestHostReturn {
   useEffect(() => {
     addLog(`isPeerOpen changed: ${isPeerOpen}`);
   }, [isPeerOpen, addLog]);
+
+  useEffect(() => {
+    if (isReconnecting) {
+      addLog(`♻️ Reconnecting (attempt ${reconnectAttempts})`);
+    } else if (reconnectAttempts > 0) {
+      addLog("✅ Reconnected successfully");
+    }
+  }, [addLog, isReconnecting, reconnectAttempts]);
 
   useEffect(() => {
     if (latestMessageWrapper) {
@@ -138,12 +161,40 @@ export function useTestHost(config: UseTestHostConfig = {}): UseTestHostReturn {
     addLog("📋 Logs copied to clipboard");
   }, [logs, addLog]);
 
+  const handleRetryConnection = useCallback(() => {
+    addLog("🔄 Forcing a reconnect attempt...");
+    retryConnection();
+  }, [addLog, retryConnection]);
+
+  const handleRestartPeer = useCallback(() => {
+    addLog("♻️ Restarting peer instance...");
+    restartPeer();
+  }, [addLog, restartPeer]);
+
+  const handleReplayHistory = useCallback(() => {
+    const messagesToReplay = Math.min(history.length, 20);
+    if (connectedClients.length === 0) {
+      addLog("⚠️ No connected clients to replay history to.");
+      return;
+    }
+
+    connectedClients.forEach((clientId) => {
+      sendHistoryToClient({ id: clientId, limit: messagesToReplay });
+    });
+
+    addLog(`📼 Replayed last ${messagesToReplay} messages to ${connectedClients.length} client(s).`);
+  }, [addLog, connectedClients, history.length, sendHistoryToClient]);
+
   return {
     hostId,
     logs,
     isHosting,
     messageCount,
     isPeerOpen,
+    isReconnecting,
+    reconnectAttempts,
+    historySize: history.length,
+    connectedClients,
     peerId,
     actions: {
       startHost: handleStartHost,
@@ -152,6 +203,9 @@ export function useTestHost(config: UseTestHostConfig = {}): UseTestHostReturn {
       clearLogs: handleClearLogs,
       copyHostId: handleCopyHostId,
       copyLogs: handleCopyLogs,
+      retryConnection: handleRetryConnection,
+      restartPeer: handleRestartPeer,
+      replayHistory: handleReplayHistory,
       addLog,
     },
   };
