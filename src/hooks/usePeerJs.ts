@@ -1,5 +1,5 @@
 import { useContext, useMemo, useCallback } from "react";
-import { PeerContext } from "../context/PeerContext";
+import { PeerContext, type MessageWrapper } from "../context/PeerContext";
 
 export default function usePeerContext() {
   const context = useContext(PeerContext);
@@ -88,6 +88,16 @@ export function useClearMessageQueue() {
   return clearMessageQueue;
 }
 
+export function usePeerRecovery() {
+  const { retryConnection, restartPeer, isReconnecting, reconnectAttempts } = usePeerContext();
+  return {
+    retryConnection,
+    restartPeer,
+    isReconnecting,
+    reconnectAttempts,
+  };
+}
+
 export function usePeerId() {
   const { id } = usePeerContext();
   return { id };
@@ -112,4 +122,21 @@ export function useDidFindHost() {
   return useMemo(() => {
     return !!peerJS?.foundHost;
   }, [peerJS]);
+}
+
+export function useMessageHistory<T = unknown>() {
+  const { messageHistory } = usePeerContext();
+  return messageHistory as MessageWrapper<T>[];
+}
+
+export function useHistoryReplay<T = unknown>() {
+  const { sendHistoryToClient, getHistorySince } = usePeerContext();
+  return {
+    sendHistoryToClient: sendHistoryToClient as (options: {
+      id: string;
+      since?: number;
+      limit?: number;
+    }) => void,
+    getHistorySince: getHistorySince as (timestamp: number) => MessageWrapper<T>[],
+  };
 }
