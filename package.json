@@ -15,10 +15,11 @@
     "build": "tsc -p tsconfig.json",
     "lint": "tsc --noEmit",
     "prepare": "npm run build",
-    "demo": "vite --open /host",
+    "demo": "cd examples/debug && vite --open /host",
     "demo:open": "node -e \"setTimeout(() => { require('child_process').exec('start http://localhost:3000/host && timeout /t 1 && start http://localhost:3000/client'); }, 2000)\"",
-    "demo:build": "vite build",
-    "demo:preview": "vite preview"
+    "demo:build": "cd examples/debug && vite build",
+    "demo:preview": "cd examples/debug && vite preview",
+    "chat": "cd examples/chat && vite --open"
   },
   "keywords": ["peerjs", "react", "hooks", "webrtc"],
   "author": "",

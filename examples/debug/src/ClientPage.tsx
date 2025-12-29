@@ -1,17 +1,17 @@
-import PeerContextProvider from "../context/PeerContextProvider";
-import { PeerTestHost } from "./ui/PeerTest/PeerTestHost";
-import type { TestMessage } from "./hooks/useTestHost";
+import PeerContextProvider from "../../../src/context/PeerContextProvider";
+import { PeerTestClient } from "./ui/PeerTest/PeerTestClient";
+import type { TestMessage } from "./hooks/useTestClient";
 
-export function HostPage() {
+export function ClientPage() {
   return (
     <div style={{ padding: "2rem", background: "#f9f9f9", minHeight: "100vh" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
         <header style={{ marginBottom: "2rem", textAlign: "center" }}>
           <h1 style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
-            🔌 Peerless Demo - Host
+            🔌 Peerless Demo - Client
           </h1>
           <p style={{ fontSize: "1.1rem", color: "#666" }}>
-            Test WebRTC peer-to-peer connections as the host
+            Test WebRTC peer-to-peer connections as a client
           </p>
         </header>
 
@@ -25,7 +25,7 @@ export function HostPage() {
           }}
         >
           <PeerContextProvider<TestMessage>>
-            <PeerTestHost />
+            <PeerTestClient hostId="" />
           </PeerContextProvider>
         </div>
 
@@ -40,31 +40,31 @@ export function HostPage() {
           <h2 style={{ marginBottom: "1rem" }}>How to test:</h2>
           <ol style={{ lineHeight: "1.8", paddingLeft: "1.5rem" }}>
             <li>
-              <strong>Start the Host:</strong> Click "1. Start Host" button above
-            </li>
-            <li>
-              <strong>Copy Host ID:</strong> Click "Copy Host ID" button
-            </li>
-            <li>
-              <strong>Open Client:</strong> Navigate to{" "}
-              <a href="/client" style={{ color: "#0066cc" }}>
-                /client
+              <strong>Get Host ID:</strong> From the{" "}
+              <a href="/host" style={{ color: "#0066cc" }}>
+                /host
               </a>{" "}
-              (or open in a new window)
+              page, start a host and copy the Host ID
             </li>
             <li>
-              <strong>Connect Client:</strong> Paste the Host ID in the client page and
-              click "1. Connect to Host"
+              <strong>Enter Host ID:</strong> Paste the Host ID in the "Host ID to connect to" input field
             </li>
             <li>
-              <strong>Test Communication:</strong> Use "Send Broadcast" here or "Send
-              Test Message" on the client
+              <strong>Click Connect:</strong> Click "1. Connect to Host" button
             </li>
             <li>
-              <strong>Monitor Stats:</strong> Watch the connection stats update in
-              real-time
+              <strong>Test Communication:</strong> Once connected, use "2. Request Sync"
+              or "3. Send Test Message"
+            </li>
+            <li>
+              <strong>Monitor Stats:</strong> Watch the connection stats and event log
+              update in real-time
             </li>
           </ol>
+          <p style={{ marginTop: "1rem", color: "#666", fontStyle: "italic" }}>
+            💡 Tip: Open this page in a separate window or browser to test real
+            peer-to-peer communication
+          </p>
         </section>
       </div>
     </div>
