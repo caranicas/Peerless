@@ -10,6 +10,9 @@ export function PeerlessStats() {
     isConnected,
     foundHost,
     latestMessage,
+    isReconnecting,
+    reconnectAttempts,
+    messageHistory,
   } = usePeerContext();
 
   return (
@@ -43,6 +46,13 @@ export function PeerlessStats() {
         </li>
         <li>
           <strong>Latest message:</strong> {JSON.stringify(latestMessage?.data)}
+        </li>
+        <li>
+          <strong>Reconnecting:</strong>{" "}
+          {isReconnecting ? `yes (attempt ${reconnectAttempts})` : "no"}
+        </li>
+        <li>
+          <strong>History stored:</strong> {messageHistory.length} message(s)
         </li>
       </ul>
     </div>

@@ -18,7 +18,19 @@ export function PeerTestHost({
   className = "",
   ...config
 }: PeerTestHostProps) {
-  const { hostId, logs, isHosting, messageCount, isPeerOpen, peerId, actions } = useTestHost(config);
+  const {
+    hostId,
+    logs,
+    isHosting,
+    messageCount,
+    isPeerOpen,
+    peerId,
+    isReconnecting,
+    reconnectAttempts,
+    historySize,
+    connectedClients,
+    actions,
+  } = useTestHost(config);
 
   const defaultButton = (props: {
     onClick: () => void;
@@ -58,6 +70,16 @@ export function PeerTestHost({
             <p>
               <strong>Messages Received:</strong> {messageCount}
             </p>
+            <p>
+              <strong>Connected Clients:</strong> {connectedClients.length}
+            </p>
+            <p>
+              <strong>Stored History:</strong> {historySize} messages
+            </p>
+            <p>
+              <strong>Reconnecting:</strong>{" "}
+              {isReconnecting ? `♻️ Yes (attempt ${reconnectAttempts})` : "✅ No"}
+            </p>
           </div>
         </section>
 
@@ -89,6 +111,18 @@ export function PeerTestHost({
             </ButtonComponent>
             <ButtonComponent onClick={actions.stopHost} disabled={!isHosting}>
               3. Stop Host
+            </ButtonComponent>
+            <ButtonComponent onClick={actions.retryConnection} disabled={!isHosting && !isPeerOpen}>
+              Retry Connection
+            </ButtonComponent>
+            <ButtonComponent onClick={actions.restartPeer}>
+              Restart Peer
+            </ButtonComponent>
+            <ButtonComponent
+              onClick={actions.replayHistory}
+              disabled={connectedClients.length === 0 || historySize === 0}
+            >
+              Replay Recent History
             </ButtonComponent>
             <ButtonComponent onClick={actions.clearLogs}>Clear Logs</ButtonComponent>
           </div>

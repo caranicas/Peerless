@@ -20,7 +20,16 @@ export function PeerTestClient({
   ...config
 }: PeerTestClientProps) {
   const [hostIdInput, setHostIdInput] = useState(config.hostId || "");
-  const { hostId, clientId, logs, isConnecting, isPeerOpen, actions } = useTestClient({
+  const {
+    hostId,
+    clientId,
+    logs,
+    isConnecting,
+    isPeerOpen,
+    isReconnecting,
+    reconnectAttempts,
+    actions,
+  } = useTestClient({
     ...config,
     hostId: hostIdInput,
   });
@@ -59,6 +68,10 @@ export function PeerTestClient({
             </p>
             <p>
               <strong>Is Connecting:</strong> {isConnecting ? "✅ Yes" : "❌ No"}
+            </p>
+            <p>
+              <strong>Reconnecting:</strong>{" "}
+              {isReconnecting ? `♻️ Yes (attempt ${reconnectAttempts})` : "✅ No"}
             </p>
           </div>
         </section>
@@ -101,6 +114,12 @@ export function PeerTestClient({
             </ButtonComponent>
             <ButtonComponent onClick={actions.broadcast} disabled={!isPeerOpen}>
               4. Broadcast to All
+            </ButtonComponent>
+            <ButtonComponent onClick={actions.retryConnection} disabled={!isPeerOpen && !isConnecting}>
+              Retry Connection
+            </ButtonComponent>
+            <ButtonComponent onClick={actions.restartPeer}>
+              Restart Peer
             </ButtonComponent>
             <ButtonComponent onClick={actions.clearLogs}>Clear Logs</ButtonComponent>
           </div>

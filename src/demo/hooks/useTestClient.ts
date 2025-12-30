@@ -5,6 +5,7 @@ import {
   useBroadcastFromClient,
   useLatestMessageWrapper,
   useSelectIsPeerOpen,
+  usePeerRecovery,
 } from "../../hooks/usePeerJs";
 
 export interface TestMessage {
@@ -29,6 +30,8 @@ export interface UseTestClientReturn {
   logs: string[];
   isConnecting: boolean;
   isPeerOpen: boolean;
+  isReconnecting: boolean;
+  reconnectAttempts: number;
   actions: {
     connect: () => void;
     sendMessage: () => void;
@@ -36,6 +39,8 @@ export interface UseTestClientReturn {
     broadcast: () => void;
     clearLogs: () => void;
     copyLogs: () => void;
+    retryConnection: () => void;
+    restartPeer: () => void;
     addLog: (message: string) => void;
   };
 }
@@ -54,6 +59,7 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
   const broadcast = useBroadcastFromClient<TestMessage & { _relay?: boolean }>();
   const latestMessageWrapper = useLatestMessageWrapper<TestMessage>();
   const isPeerOpen = useSelectIsPeerOpen();
+  const { retryConnection, restartPeer, isReconnecting, reconnectAttempts } = usePeerRecovery();
 
   const addLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -67,6 +73,14 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
   useEffect(() => {
     addLog(`isPeerOpen changed: ${isPeerOpen}`);
   }, [isPeerOpen, addLog]);
+
+  useEffect(() => {
+    if (isReconnecting) {
+      addLog(`♻️ Reconnecting (attempt ${reconnectAttempts})`);
+    } else if (reconnectAttempts > 0) {
+      addLog("✅ Reconnected successfully");
+    }
+  }, [addLog, isReconnecting, reconnectAttempts]);
 
   useEffect(() => {
     if (latestMessageWrapper) {
@@ -168,12 +182,24 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
     addLog("📋 Logs copied to clipboard");
   }, [logs, addLog]);
 
+  const handleRetryConnection = useCallback(() => {
+    addLog("🔄 Forcing a reconnect attempt...");
+    retryConnection();
+  }, [addLog, retryConnection]);
+
+  const handleRestartPeer = useCallback(() => {
+    addLog("♻️ Restarting peer instance...");
+    restartPeer();
+  }, [addLog, restartPeer]);
+
   return {
     hostId: config.hostId,
     clientId,
     logs,
     isConnecting,
     isPeerOpen,
+    isReconnecting,
+    reconnectAttempts,
     actions: {
       connect: handleConnect,
       sendMessage: handleSendMessage,
@@ -181,6 +207,8 @@ export function useTestClient(config: UseTestClientConfig): UseTestClientReturn 
       broadcast: handleBroadcast,
       clearLogs: handleClearLogs,
       copyLogs: handleCopyLogs,
+      retryConnection: handleRetryConnection,
+      restartPeer: handleRestartPeer,
       addLog,
     },
   };
